@@ -22,7 +22,7 @@ public class Galaxy {
     // En C++ usabas de x=2 a 97 y y=3 a 30. 
     // En píxeles (suponiendo escala de 10), sería algo como:
     int x1 = 20, y1 = 30;
-    int ancho = 950; // Ajusta según tu ventana
+    int ancho = 950; // Ajusta según la ventana
     int alto = 300;
     
     // Dibujar el rectángulo de los límites (Sustituye a todos tus bucles for)
