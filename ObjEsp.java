@@ -1,5 +1,5 @@
 package logica;
-
+//
 import java.util.Random;
 import java.awt.Graphics;
 import java.awt.Color;
@@ -88,6 +88,7 @@ public class ObjEsp {
     }
 
     public void verificarChoque(Nave nave) {
+        
         // Simulación de colisión por área (Hitbox)
         // En C++ usabas coordenadas de texto, aquí usamos píxeles
         if (x + 20 > nave.getX() && x < nave.getX() + 35 &&
@@ -106,7 +107,8 @@ public class ObjEsp {
 // --- CLASE NAVE (Equivalente a NAVE N(20,24,3,3)) ---
 class Nave {
     private int x, y, hp, vidas;
-
+    private final int HP_MAX = 3; // Definimos el máximo de vida para los cálculos
+    
     public Nave(int x, int y, int hp, int vidas) {
         this.x = x;
         this.y = y;
@@ -119,6 +121,12 @@ class Nave {
     public int getY() { return y; }
     public int getVidas() { return vidas; }
 
+    // Agregamos este Getter para obtener el HP actual en la interfaz--------------chava
+    public int getHp() { return hp; }
+    
+    
+    
+    
     public void BajarHp() { if (hp > 0) hp--; }
     public void sumarVidas(int v) { vidas += v; }
 
@@ -257,7 +265,34 @@ public void actualizar() { // Quitamos el keyCode de aquí
         //Movimento del jefe
         if (modoJefe && jefeActual != null) {
         jefeActual.mover();
+        
+        // --- NUEVA COLISIÓN ---------------------------------------------------------------------------------------------------------ultima actualizacion - chava
+        // Si Kirby toca al jefe
+    if (nave.getX() + 30 > jefeActual.getX() && nave.getX() < jefeActual.getX() + 100 &&
+        nave.getY() + 25 > jefeActual.getY() && nave.getY() < jefeActual.getY() + 80) {
+        
+        nave.BajarHp(); // Le quita 1 vida cada que lo toca
+        
+        // --- SOLUCIÓN: EMPUJAR A KIRBY ---
+        // Lo mandamos 50 píxeles hacia abajo para sacarlo de la colisión
+        // Así el próximo "latido" del Timer (30ms después) ya no estará tocando al jefe
+        nave.procesarMovimiento(KeyEvent.VK_DOWN); 
+        nave.procesarMovimiento(KeyEvent.VK_DOWN);
+        nave.procesarMovimiento(KeyEvent.VK_DOWN);
+        nave.procesarMovimiento(KeyEvent.VK_DOWN);
+        nave.procesarMovimiento(KeyEvent.VK_DOWN);
+        
+        /*
+        Usa lo que ya tenemis utilizamoss el método 'procesarMovimiento' que ya existe enla clase Nave.
+        Evita el daño continuo Al desplazar la coordenada y de la nave bruscamente hacia abajo, la condición de colision (if) 
+        dejará de cumplirse en el siguiente ciclo del Timer, dando oportunidad de reaccionar.
+        */
+        }
     }
+        
+        
+        
+        
         // Mover asteroides (solo si no estamos en modo jefe, para ahorrar recursos)
     if (!modoJefe) {
         for (ObjEsp ast : asteroides) {
@@ -434,7 +469,31 @@ class VentanaJuego extends JPanel implements ActionListener, KeyListener {
     // Este método se llama automáticamente cada vez que pedimos redibujar.
     @Override
     protected void paintComponent(Graphics g) {
-        // super.paintComponent(g) limpia lo que se dibujó antes (reemplaza system("cls"))
+      
+       
+    g.setColor(Color.BLACK);
+    g.fillRect(0, 0, getWidth(), getHeight());
+
+    juego.dibujarTodo(g);
+
+    // HUD: Texto de Puntos y Nivel
+    g.setColor(Color.WHITE);
+    g.drawString("Puntos: " + juego.getPuntos() + "  Nivel: " + juego.getNivel(), 10, 20);
+    
+    // BARRA DE VIDA EN EL HUD (Esquina superior)
+    g.drawString("VIDAS: " + juego.getNave().getVidas(), 10, 40);
+    g.drawString("HP: ", 10, 60);
+    
+    g.setColor(Color.RED);
+    g.fillRect(40, 50, 60, 10); // Fondo rojo de daño
+    
+    g.setColor(Color.GREEN);
+    // Asumiendo que HP_MAX es 3 y el ancho de la barra es 60
+    int anchoHp = (juego.getNave().getHp() * 60) / 3; 
+    g.fillRect(40, 50, anchoHp, 10); // Barra de vida actual
+        ///------------------------------------------------------------------------------------------------------------------------------------------esto es sin la barra
+        /*
+          // super.paintComponent(g) limpia lo que se dibujó antes (reemplaza system("cls"))
         super.paintComponent(g); 
         
         // Fondo: En consola era por defecto, aquí pintamos un rectángulo negro total
@@ -448,8 +507,10 @@ class VentanaJuego extends JPanel implements ActionListener, KeyListener {
         g.setColor(Color.WHITE);
         g.drawString("Puntos: " + juego.getPuntos() + "  Nivel: " + juego.getNivel(), 10, 20);
         g.drawString(juego.getNave().obtenerHUD(), 10, 40);
+        */
 
         // Lógica de Fin de Juego (Sustituye al printf final del main de C++)
+       
         if (juego.isGameOver()) {
             g.setColor(Color.RED);
             g.setFont(new Font("Monospaced", Font.BOLD, 40));
