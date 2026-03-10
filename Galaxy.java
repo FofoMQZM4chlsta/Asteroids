@@ -39,13 +39,15 @@ public class Galaxy {
     public static void main(String[] args) {
         // C++: asteroids() y system("pause")
         // En Java, la interfaz gráfica se lanza creando un objeto JFrame.
+        
         JFrame ventana = new JFrame("Asteroides 2D - Java Edition");
         
         // Creamos la instancia de la pantalla (el lienzo de dibujo)
-        VentanaJuego panelDeJuego = new VentanaJuego();
+        
+        Menu menu = new Menu();
         
         // Configuración de la ventana (reemplaza los comandos de consola)
-        ventana.add(panelDeJuego);          // Metemos el juego dentro de la ventana
+        ventana.setContentPane(menu); // Metemos el juego dentro de la ventana
         ventana.setSize(800, 600);          // Definimos resolución en píxeles (no en caracteres)
         ventana.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Al cerrar la ventana, el proceso termina
         ventana.setLocationRelativeTo(null); // Centra la ventana en el monitor

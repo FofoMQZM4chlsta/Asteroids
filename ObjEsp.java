@@ -225,6 +225,7 @@ class Juego {
         actSpeed = 5;
         gameOver = false;
         
+        Musicachida.nomusiquita();
         Musicachida.Musiquita();
         
 
@@ -517,7 +518,6 @@ public void keyPressed(KeyEvent e) {
         juego.manejarInput(key); 
     }
 }
-
     // Métodos vacíos obligatorios (Java los pide aunque no se usen)
     @Override public void keyReleased(KeyEvent e) {}
     @Override public void keyTyped(KeyEvent e) {}

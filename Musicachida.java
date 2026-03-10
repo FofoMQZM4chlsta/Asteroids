@@ -40,6 +40,23 @@ public class Musicachida {
         }
 
     }
+    
+    public static void Machi() {
+
+        try {
+
+            AudioInputStream audio = AudioSystem.getAudioInputStream(
+            Musicachida.class.getResource("Mach.wav"));
+
+            musica = AudioSystem.getClip();
+            musica.open(audio);
+            musica.loop(Clip.LOOP_CONTINUOUSLY);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
 
     public static void nomusiquita() {
 
