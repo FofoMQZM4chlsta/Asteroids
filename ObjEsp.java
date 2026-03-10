@@ -1,5 +1,4 @@
 package logica;
-//
 import java.util.Random;
 import java.awt.Graphics;
 import java.awt.Color;
@@ -14,11 +13,32 @@ import javax.swing.Timer;    // CAMBIO IMPORTANTE: Usamos el Timer de Swing, no 
 import javax.swing.JPanel;
 import javax.swing.JFrame;   // Para poder probarlo en un main
 
+class Cohete {
+    private int x, y;
+    public Cohete(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+    public void mover() { y += 6; } // Cae hacia Kirby
+    public void pintar(Graphics g) {
+        g.setColor(Color.ORANGE);
+        g.fillRoundRect(x, y, 10, 20, 5, 5); // Cuerpo del cohete
+        
+        // CORRECCIÓN AQUÍ:
+        g.setColor(Color.RED);
+        g.fillPolygon(new int[]{x, x + 5, x + 10}, new int[]{y + 20, y + 30, y + 20}, 3); 
+    }
+    public boolean fuera() { return y > 600; }
+    public int getX() { return x; }
+    public int getY() { return y; }
+}
+
 // ---Clase  Jefe---
 class Jefe {
     private int x, y, vida, speedX, vidaMaxima;
+    private double angulo = 0; // Para el movimiento ondulado
     private boolean activo;
-
+    private int timerDisparo = 0;
     public Jefe(int nivel) {
         this.x = 350;
         this.y = -100; // Aparece desde arriba
@@ -28,31 +48,95 @@ class Jefe {
         this.activo = false;
     }
 
-    public void aparecer() { activo = true; }
+public void aparecer() { activo = true; }
 
-public void mover() {
+    public void mover() {
         if (!activo) return;
-        if (y < 80) y += 2;
+        
+        // 1. Entrada suave desde arriba
+        if (y < 60) y += 1;
+        
+        // 2. Movimiento Horizontal
         x += speedX;
-        if (x <= 50 || x >= 700) speedX *= -1;
+        if (x <= 30 || x >= 670) speedX *= -1;
+
+        // 3. MOVIMIENTO NO LINEAL (Flotar en ondas)
+        // Usamos Math.sin para que suba y baje suavemente
+        angulo += 0.05;
+        y = 60 + (int)(Math.sin(angulo) * 20); 
+    }
+    // Método para saber si debe disparar (cada 60 ciclos aprox)
+    public boolean debeDisparar() {
+        if (!activo) return false;
+        timerDisparo++;
+        if (timerDisparo >= 50) { // Ajusta este número para más o menos dificultad
+            timerDisparo = 0;
+            return true;
+        }
+        return false;
     }
 
 public void pintar(Graphics g) {
-        if (!activo) return;
-        
-        // Cuerpo del Jefe
-        g.setColor(Color.MAGENTA);
-        g.fillRoundRect(x, y, 100, 80, 20, 20);
-        
-        // --- BARRA DE VIDA CORREGIDA ---
-        g.setColor(Color.RED); // Fondo rojo (daño)
-        g.fillRect(x, y - 20, 100, 10);
-        
-        g.setColor(Color.GREEN); // Parte verde (vida actual)
-        // Regla de 3: (vida actual * ancho total) / vida inicial
-        int anchoVida = (vida * 100) / vidaMaxima; 
-        g.fillRect(x, y - 20, anchoVida, 10);
-    }
+    if (!activo) return;
+    // --- BARRA DE VIDA MEJORADA (Mantenemos tu lógica original) ---
+    // La subimos un poco (y - 30) para que no choque con el halo
+    g.setColor(Color.RED); 
+    g.fillRect(x, y - 30, 100, 10);
+   
+    g.setColor(Color.GREEN); 
+    // Regla de 3 para calcular el ancho de la vida
+    int anchoVida = (vida * 100) / vidaMaxima; 
+    g.fillRect(x, y - 30, anchoVida, 10);
+    
+    // Borde blanco para la barra de vida
+    g.setColor(Color.WHITE);
+    g.drawRect(x, y - 30, 100, 10);
+
+    // --- DISEÑO DE KING DEDEDE (Basado en la imagen proporcionada) ---
+    // Usamos variables locales para que sea más claro dibujar todo centrado en (x,y)
+    int width = 100;
+    int height = 80;
+    
+    // 1. Halo (Aro superior en gris y blanco)
+    g.setColor(Color.WHITE);
+    g.fillOval(x + width/2 - 15, y - 10, 30, 15);
+    g.setColor(Color.GRAY);
+    g.drawOval(x + width/2 - 15, y - 10, 30, 15);
+
+    // 2. Parte superior de la cabeza (Redonda y Roja)
+    g.setColor(new Color(220, 0, 0)); // Rojo sólido
+    g.fillArc(x, y, width, 50, 0, 180);
+
+    // 3. Banda de ojos (Onda Azul)
+    g.setColor(new Color(0, 140, 255)); // Azul brillante
+    g.fillRect(x, y + 20, width, 15);
+    g.fillOval(x + 10, y + 30, 80, 10);
+
+    // 4. Mandíbula y Pico (Onda Naranja/Amarilla)
+    g.setColor(new Color(255, 170, 0)); // Naranja brillante
+    g.fillRoundRect(x + 10, y + 35, 80, 45, 20, 20); // Mandíbula redondeada
+
+    // 5. Cresta Central (Forma de gota Amarilla)
+    g.setColor(new Color(255, 220, 0)); // Amarillo vibrante
+    g.fillOval(x + width/2 - 20, y - 5, 40, 35); // La parte superior de la gota
+    g.fillRect(x + width/2 - 15, y + 15, 30, 20); // El cuerpo de la gota
+
+    // 6. Detalles de la cresta (Línea central)
+    g.setColor(Color.BLACK);
+    g.drawLine(x + width/2, y - 5, x + width/2, y + 25);
+    
+    // 7. Línea de separación del pico (Naranja más oscuro)
+    g.setColor(new Color(200, 120, 0));
+    g.drawLine(x + width/2 - 20, y + 60, x + width/2 + 20, y + 60);
+
+    // 8. Bordes generales (Negro sólido, igual que en la imagen)
+    g.setColor(Color.BLACK);
+    g.drawArc(x, y, width, 50, 0, 180); // Borde rojo
+    g.drawRect(x, y + 20, width, 15); // Borde azul
+    g.drawRoundRect(x + 10, y + 35, 80, 45, 20, 20); // Borde mandíbula
+    g.drawOval(x + width/2 - 20, y - 5, 40, 35); // Borde cresta
+}
+
 public void recibirDanio() { if(vida > 0) vida--; }
     public int getVida() { return vida; }
     public boolean isActivo() { return activo; }
@@ -82,13 +166,30 @@ public class ObjEsp {
         }
     }
 
-    public void pintar(Graphics g) {
-        g.setColor(Color.RED); // Reemplaza a setColor(red)
-        g.fillOval(x, y, 25, 25); // Reemplaza a printf("*") o caracteres
-    }
+public void pintar(Graphics g) {
+    // Cuerpo principal del asteroide (Gris oscuro/marrón)
+    g.setColor(new Color(105, 105, 105)); 
+    g.fillOval(x, y, 28, 26); // Un poco más irregular que un círculo perfecto
+
+    // Borde para dar volumen
+    g.setColor(Color.BLACK);
+    g.drawOval(x, y, 28, 26);
+
+    // --- DETALLES: CRÁTERES ---
+    g.setColor(new Color(60, 60, 60)); // Gris más oscuro
+    // Cráter 1
+    g.fillOval(x + 5, y + 6, 6, 6);
+    // Cráter 2
+    g.fillOval(x + 15, y + 12, 8, 8);
+    // Cráter 3
+    g.fillOval(x + 8, y + 18, 4, 4);
+    
+    // Un pequeño brillo para que no se vea plano
+    g.setColor(new Color(150, 150, 150, 100)); // Blanco transparente
+    g.drawArc(x + 3, y + 3, 20, 20, 100, 50);
+}
 
     public void verificarChoque(Nave nave) {
-        
         // Simulación de colisión por área (Hitbox)
         // En C++ usabas coordenadas de texto, aquí usamos píxeles
         if (x + 20 > nave.getX() && x < nave.getX() + 35 &&
@@ -107,8 +208,7 @@ public class ObjEsp {
 // --- CLASE NAVE (Equivalente a NAVE N(20,24,3,3)) ---
 class Nave {
     private int x, y, hp, vidas;
-    private final int HP_MAX = 3; // Definimos el máximo de vida para los cálculos
-    
+
     public Nave(int x, int y, int hp, int vidas) {
         this.x = x;
         this.y = y;
@@ -121,12 +221,6 @@ class Nave {
     public int getY() { return y; }
     public int getVidas() { return vidas; }
 
-    // Agregamos este Getter para obtener el HP actual en la interfaz--------------chava
-    public int getHp() { return hp; }
-    
-    
-    
-    
     public void BajarHp() { if (hp > 0) hp--; }
     public void sumarVidas(int v) { vidas += v; }
 
@@ -222,6 +316,9 @@ class Juego {
     private ArrayList<EstrellaFondo> estrellasDecorativas; // Nueva lista
     private Jefe jefeActual; //Nuevas variables para el jefe
     private boolean modoJefe = false;
+    private ArrayList<Cohete> cohetesJefe = new ArrayList<>();
+    
+    public boolean isModoJefe() { return modoJefe; }
     
     public Juego() {
         rand = new Random();
@@ -232,6 +329,8 @@ class Juego {
         nivel = 1;
         actSpeed = 5;
         gameOver = false;
+        
+        Musicachida.Musiquita();
         
 
         // Bucle inicial de creación (for(int i=0; i<6; ++i))
@@ -265,10 +364,27 @@ public void actualizar() { // Quitamos el keyCode de aquí
         //Movimento del jefe
         if (modoJefe && jefeActual != null) {
         jefeActual.mover();
+        // NUEVO: El jefe dispara
+        if (jefeActual.debeDisparar()) {
+            cohetesJefe.add(new Cohete(jefeActual.getX() + 45, jefeActual.getY() + 70));
+        }
+        // NUEVO: Mover cohetes y ver si golpean a Kirby
+        Iterator<Cohete> itC = cohetesJefe.iterator();
+        while (itC.hasNext()) {
+            Cohete c = itC.next();
+            c.mover();
+            
+            // Colisión cohete -> Nave
+            if (c.getX() > nave.getX() && c.getX() < nave.getX() + 35 &&
+                c.getY() > nave.getY() && c.getY() < nave.getY() + 30) {
+                nave.BajarHp();
+                itC.remove();
+            } else if (c.fuera()) {
+                itC.remove();
+            }
+        }
         
-        // --- NUEVA COLISIÓN ---------------------------------------------------------------------------------------------------------ultima actualizacion - chava
-        // Si Kirby toca al jefe
-    if (nave.getX() + 30 > jefeActual.getX() && nave.getX() < jefeActual.getX() + 100 &&
+        if (nave.getX() + 30 > jefeActual.getX() && nave.getX() < jefeActual.getX() + 100 &&
         nave.getY() + 25 > jefeActual.getY() && nave.getY() < jefeActual.getY() + 80) {
         
         nave.BajarHp(); // Le quita 1 vida cada que lo toca
@@ -289,9 +405,6 @@ public void actualizar() { // Quitamos el keyCode de aquí
         */
         }
     }
-        
-        
-        
         
         // Mover asteroides (solo si no estamos en modo jefe, para ahorrar recursos)
     if (!modoJefe) {
@@ -339,6 +452,10 @@ private void verificarColisionesBalas() {
                 if (jefeActual.getVida() <= 0) {
                     puntos += 500;
                     modoJefe = false;      // Desactivamos modo jefe
+                    balas.clear(); // <--- AÑADE ESTO: Borra las balas activas para evitar el lag visual
+                    cohetesJefe.clear(); // Borra también los cohetes que quedaron en el aire
+                    Musicachida.nomusiquita();
+                    Musicachida.Musiquita();
                     
                     // Volver a poblar el espacio con asteroides
                     for (int i = 0; i < 6; i++) {
@@ -385,7 +502,7 @@ private void subirNivel() {
         if (puntos >= 100 && nivel == 1) {
             nivel = 2;
             iniciarBatallaJefe();
-        } else if (puntos >= 300 && nivel == 2) {
+        } else if (puntos >= 700 && nivel == 2) {
             nivel = 3;
             iniciarBatallaJefe();
         }
@@ -396,6 +513,8 @@ private void subirNivel() {
     //Metodo para el jefe
     private void iniciarBatallaJefe() {
     modoJefe = true;
+    Musicachida.nomusiquita();
+    Musicachida.MusiquitaDedede();
     jefeActual = new Jefe(nivel);
     jefeActual.aparecer();
     // Limpiamos asteroides para que no estorben
@@ -403,20 +522,22 @@ private void subirNivel() {
 }
 
     // Este método reemplaza a todas las llamadas de pintar() individuales
-    public void dibujarTodo(Graphics g) {
-        nave.pintar(g);
-        //Primero el fondo y luego lo demas
-        for (EstrellaFondo ef : estrellasDecorativas) {
-            ef.pintar(g);
-        }
-        for (ObjEsp ast : asteroides) ast.pintar(g);
-        for (Bala b : balas) b.pintar(g);
-        // 3. NUEVO: Dibujar al Jefe
-    if (modoJefe && jefeActual != null) {
-        jefeActual.pintar(g);
+public void dibujarTodo(Graphics g) {
+    // Pasamos el estado de modoJefe a las estrellas
+    for (EstrellaFondo ef : estrellasDecorativas) {
+        ef.pintar(g, modoJefe); 
     }
     
+    nave.pintar(g);
+    if (!modoJefe) {
+        for (ObjEsp ast : asteroides) ast.pintar(g);
     }
+    for (Bala b : balas) b.pintar(g);
+    if (modoJefe && jefeActual != null) {
+        jefeActual.pintar(g);
+        for (Cohete c : cohetesJefe) c.pintar(g);
+    }
+}
 
     public int getPuntos() { return puntos; }
     public int getNivel() { return nivel; }
@@ -427,6 +548,19 @@ private void subirNivel() {
 class EstrellaFondo {
     private int x, y, velocidad;
     private Random rand = new Random();
+    public void pintar(Graphics g, boolean esPasto) {
+        if (esPasto) {
+            // En modo jefe, las estrellas parecen pequeñas flores o motas de polen
+            g.setColor(new Color(255, 255, 255, 150)); 
+            g.fillOval(x, y, 3, 3);
+            g.setColor(new Color(255, 200, 0));
+            g.fillOval(x + 1, y + 1, 1, 1);
+        } else {
+            // Fondo espacial normal
+            g.setColor(Color.WHITE);
+            g.fillOval(x, y, 2, 2);
+        }
+    }
 
     public EstrellaFondo() {
         this.x = rand.nextInt(800);
@@ -469,37 +603,14 @@ class VentanaJuego extends JPanel implements ActionListener, KeyListener {
     // Este método se llama automáticamente cada vez que pedimos redibujar.
     @Override
     protected void paintComponent(Graphics g) {
-      
-       
-    g.setColor(Color.BLACK);
+        // super.paintComponent(g) limpia lo que se dibujó antes (reemplaza system("cls"))
+// CAMBIO DINÁMICO DE FONDO
+    if (juego.isModoJefe()) {
+        g.setColor(new Color(100, 200, 50)); // Verde pasto/pradera
+    } else {
+        g.setColor(Color.BLACK); // Espacio normal
+    }
     g.fillRect(0, 0, getWidth(), getHeight());
-
-    juego.dibujarTodo(g);
-
-    // HUD: Texto de Puntos y Nivel
-    g.setColor(Color.WHITE);
-    g.drawString("Puntos: " + juego.getPuntos() + "  Nivel: " + juego.getNivel(), 10, 20);
-    
-    // BARRA DE VIDA EN EL HUD (Esquina superior)
-    g.drawString("VIDAS: " + juego.getNave().getVidas(), 10, 40);
-    g.drawString("HP: ", 10, 60);
-    
-    g.setColor(Color.RED);
-    g.fillRect(40, 50, 60, 10); // Fondo rojo de daño
-    
-    g.setColor(Color.GREEN);
-    // Asumiendo que HP_MAX es 3 y el ancho de la barra es 60
-    int anchoHp = (juego.getNave().getHp() * 60) / 3; 
-    g.fillRect(40, 50, anchoHp, 10); // Barra de vida actual
-        ///------------------------------------------------------------------------------------------------------------------------------------------esto es sin la barra
-        /*
-          // super.paintComponent(g) limpia lo que se dibujó antes (reemplaza system("cls"))
-        super.paintComponent(g); 
-        
-        // Fondo: En consola era por defecto, aquí pintamos un rectángulo negro total
-        g.setColor(Color.BLACK);
-        g.fillRect(0, 0, getWidth(), getHeight());
-
         // Llamamos al método que recorre todas las listas (balas, asteroides) y las pinta
         juego.dibujarTodo(g);
 
@@ -507,11 +618,10 @@ class VentanaJuego extends JPanel implements ActionListener, KeyListener {
         g.setColor(Color.WHITE);
         g.drawString("Puntos: " + juego.getPuntos() + "  Nivel: " + juego.getNivel(), 10, 20);
         g.drawString(juego.getNave().obtenerHUD(), 10, 40);
-        */
 
         // Lógica de Fin de Juego (Sustituye al printf final del main de C++)
-       
         if (juego.isGameOver()) {
+            Musicachida.nomusiquita();
             g.setColor(Color.RED);
             g.setFont(new Font("Monospaced", Font.BOLD, 40));
             g.drawString("GAME OVER", 280, 250);
