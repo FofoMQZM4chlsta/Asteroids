@@ -7,7 +7,6 @@ import java.util.Scanner;    // Sustituye a <stdio.h>
 import java.lang.Math;       // Sustituye a <cmath>
 import java.awt.event.KeyEvent;
 
-
 public class Galaxy {
     // Definimos las constantes (Sustituyen a los #define de C++)
     // Usamos los códigos estándar de Java (VK = Virtual Key)

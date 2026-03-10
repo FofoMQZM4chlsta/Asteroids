@@ -225,6 +225,8 @@ class Juego {
         actSpeed = 5;
         gameOver = false;
         
+        Musicachida.Musiquita();
+        
 
         // Bucle inicial de creación (for(int i=0; i<6; ++i))
         for (int i = 0; i < 6; i++) {
@@ -257,7 +259,29 @@ public void actualizar() { // Quitamos el keyCode de aquí
         //Movimento del jefe
         if (modoJefe && jefeActual != null) {
         jefeActual.mover();
+        
+        if (nave.getX() + 30 > jefeActual.getX() && nave.getX() < jefeActual.getX() + 100 &&
+        nave.getY() + 25 > jefeActual.getY() && nave.getY() < jefeActual.getY() + 80) {
+        
+        nave.BajarHp(); // Le quita 1 vida cada que lo toca
+        
+        // --- SOLUCIÓN: EMPUJAR A KIRBY ---
+        // Lo mandamos 50 píxeles hacia abajo para sacarlo de la colisión
+        // Así el próximo "latido" del Timer (30ms después) ya no estará tocando al jefe
+        nave.procesarMovimiento(KeyEvent.VK_DOWN); 
+        nave.procesarMovimiento(KeyEvent.VK_DOWN);
+        nave.procesarMovimiento(KeyEvent.VK_DOWN);
+        nave.procesarMovimiento(KeyEvent.VK_DOWN);
+        nave.procesarMovimiento(KeyEvent.VK_DOWN);
+        
+        /*
+        Usa lo que ya tenemis utilizamoss el método 'procesarMovimiento' que ya existe enla clase Nave.
+        Evita el daño continuo Al desplazar la coordenada y de la nave bruscamente hacia abajo, la condición de colision (if) 
+        dejará de cumplirse en el siguiente ciclo del Timer, dando oportunidad de reaccionar.
+        */
+        }
     }
+        
         // Mover asteroides (solo si no estamos en modo jefe, para ahorrar recursos)
     if (!modoJefe) {
         for (ObjEsp ast : asteroides) {
@@ -304,6 +328,8 @@ private void verificarColisionesBalas() {
                 if (jefeActual.getVida() <= 0) {
                     puntos += 500;
                     modoJefe = false;      // Desactivamos modo jefe
+                    Musicachida.nomusiquita();
+                    Musicachida.Musiquita();
                     
                     // Volver a poblar el espacio con asteroides
                     for (int i = 0; i < 6; i++) {
@@ -361,6 +387,8 @@ private void subirNivel() {
     //Metodo para el jefe
     private void iniciarBatallaJefe() {
     modoJefe = true;
+    Musicachida.nomusiquita();
+    Musicachida.MusiquitaDedede();
     jefeActual = new Jefe(nivel);
     jefeActual.aparecer();
     // Limpiamos asteroides para que no estorben
@@ -451,6 +479,7 @@ class VentanaJuego extends JPanel implements ActionListener, KeyListener {
 
         // Lógica de Fin de Juego (Sustituye al printf final del main de C++)
         if (juego.isGameOver()) {
+            Musicachida.nomusiquita();
             g.setColor(Color.RED);
             g.setFont(new Font("Monospaced", Font.BOLD, 40));
             g.drawString("GAME OVER", 280, 250);
